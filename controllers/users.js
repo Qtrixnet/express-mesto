@@ -11,7 +11,7 @@ const getUserById = (req, res) => {
   User.findById(userId)
     .then((user) => {
       if (!user) {
-        return res.status(404).send({ message: 'Запрашиваемый пользователь не найден' });
+        return res.status(404).send({ message: 'Пользователь по указанному _id не найден.' });
       }
       return res.send(user);
     })
@@ -38,8 +38,19 @@ const updateUser = (req, res) => {
   const newUserAbout = req.body.about;
   const userId = req.user._id;
   User.findByIdAndUpdate(userId, { name: newUserName, about: newUserAbout }, { new: true })
-    .then(() => {
-      res.send('Данные профиля обновлены');
+    .then((user) => {
+      if (!user) {
+        return res.status(404).send({ message: 'Пользователь по указанному _id не найден.' });
+      }
+      return res.send('Данные профиля обновлены');
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        return res.status(400).send({
+          message: 'Переданы неправильные данные',
+        });
+      }
+      return res.status(500).send({ message: 'Произошла ошибка' });
     });
 };
 
@@ -47,8 +58,19 @@ const updateAvatar = (req, res) => {
   const newUserAvatar = req.body.avatar;
   const userId = req.user._id;
   User.findByIdAndUpdate(userId, { avatar: newUserAvatar }, { new: true })
-    .then(() => {
-      res.send('Аватар обновлен');
+    .then((user) => {
+      if (!user) {
+        return res.status(404).send({ message: 'Пользователь по указанному _id не найден.' });
+      }
+      return res.send('Аватар обновлен');
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        return res.status(400).send({
+          message: 'Переданы неправильные данные',
+        });
+      }
+      return res.status(500).send({ message: 'Произошла ошибка' });
     });
 };
 

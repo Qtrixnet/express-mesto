@@ -11,7 +11,7 @@ const deleteCard = (req, res) => {
   Card.findByIdAndRemove(cardId)
     .then((card) => {
       if (!card) {
-        return res.status(404).send({ message: 'Запрашиваемая карточка не найдена' });
+        return res.status(404).send({ message: 'Карточка с указанным _id не найдена' });
       }
       return res.send(card);
     })
@@ -26,7 +26,7 @@ const createCard = (req, res) => {
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
         res.status(400).send({
-          message: 'Переданы неправильные данные',
+          message: 'Переданы некорректные данные при создании карточки.',
         });
       } else {
         res.status(500).send({ message: 'Произошла ошибка' });
@@ -34,22 +34,44 @@ const createCard = (req, res) => {
     });
 };
 
-// const likeCard = (req, res) => {
+const likeCard = (req, res) => {
+  const userId = req.user._id;
+  Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: userId } }, { new: true })
+    .then(() => {
+      res.send('Лайк поставлен');
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        res.status(400).send({
+          message: 'Переданы некорректные данные для постановки лайка',
+        });
+      } else {
+        res.status(500).send({ message: 'Произошла ошибка' });
+      }
+    });
+};
 
-// }
-
-// const unLikeCard = (req, res) => {
-
-// }
+const dislikeCard = (req, res) => {
+  const userId = req.user._id;
+  Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: userId } }, { new: true })
+    .then(() => {
+      res.send('Лайк удален');
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        res.status(400).send({
+          message: 'Переданы некорректные данные для снятия лайка',
+        });
+      } else {
+        res.status(500).send({ message: 'Произошла ошибка' });
+      }
+    });
+};
 
 module.exports = {
   getCards,
   deleteCard,
   createCard,
-  // likeCard,
-  // unLikeCard,
+  likeCard,
+  dislikeCard,
 };
-
-// module.exports.createCard = (req, res) => {
-//   console.log(req.user._id); // _id станет доступен
-// };
