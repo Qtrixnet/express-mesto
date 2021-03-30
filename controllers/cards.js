@@ -15,7 +15,15 @@ const deleteCard = (req, res) => {
       }
       return res.send(card);
     })
-    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(400).send({
+          message: 'Переданы некорректные данные',
+        });
+      } else {
+        res.status(500).send({ message: 'Произошла ошибка' });
+      }
+    });
 };
 
 const createCard = (req, res) => {
@@ -24,7 +32,7 @@ const createCard = (req, res) => {
   Card.create({ name, link, owner })
     .then((card) => res.send(card))
     .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         res.status(400).send({
           message: 'Переданы некорректные данные при создании карточки.',
         });
@@ -37,11 +45,14 @@ const createCard = (req, res) => {
 const likeCard = (req, res) => {
   const userId = req.user._id;
   Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: userId } }, { new: true })
-    .then(() => {
-      res.send('Лайк поставлен');
+    .then((data) => {
+      if (!data) {
+        return res.status(404).send({ message: 'Карточка с указанным _id не найдена' });
+      }
+      return res.send('Лайк поставлен');
     })
     .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
+      if (err.name === 'CastError') {
         res.status(400).send({
           message: 'Переданы некорректные данные для постановки лайка',
         });
@@ -54,11 +65,14 @@ const likeCard = (req, res) => {
 const dislikeCard = (req, res) => {
   const userId = req.user._id;
   Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: userId } }, { new: true })
-    .then(() => {
-      res.send('Лайк удален');
+    .then((data) => {
+      if (!data) {
+        return res.status(404).send({ message: 'Карточка с указанным _id не найдена' });
+      }
+      return res.send('Лайк удален');
     })
     .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
+      if (err.name === 'CastError') {
         res.status(400).send({
           message: 'Переданы некорректные данные для снятия лайка',
         });
