@@ -22,7 +22,7 @@ const getUserById = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new BadRequestError('Переданы некорректные данные 2');
+        throw new BadRequestError('Переданы некорректные данные');
       } else {
         next(err);
       }
@@ -96,8 +96,12 @@ const login = (req, res, next) => {
   const { email, password } = req.body;
   User.findUserByCredentials({ email, password })
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'super-strong-secret', { expiresIn: '7d' });
-      res.send({ token });
+      if (!user) {
+        throw new NotFoundError('Пользователь по указанному _id не найден.');
+      } else {
+        const token = jwt.sign({ _id: user._id }, 'super-strong-secret', { expiresIn: '7d' });
+        res.send({ token });
+      }
     })
     .catch((err) => {
       throw new AuthError('Необходима авторизация');

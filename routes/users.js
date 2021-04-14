@@ -8,7 +8,8 @@ const {
 } = require('../controllers/users');
 const {
   validateCreatUser,
-  validateLogin, validateGetUsers,
+  validateLogin,
+  validateGetUsers,
   validateGetUserInfo,
   validateGetUserById,
   validateUpdateUser,

@@ -1,4 +1,6 @@
 const { celebrate, Joi } = require('celebrate');
+const { ObjectId } = require('mongoose').Types;
+const validator = require('validator');
 
 const validateGetUsers = celebrate({
   headers: Joi.object().keys({
@@ -35,12 +37,26 @@ const validateUpdateUser = celebrate({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
   }),
+  headers: Joi.object().keys({
+    authorization: Joi.string().min(2).max(200).required(),
+  }).unknown(),
 });
 
 const validateUpdateAvatar = celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().required().pattern(/^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,8})([/\-._~:?#\][@!$&'()*+,;=\w]*)*#?$/),
+    avatar: Joi.string().custom((value, helpers) => {
+      if (validator.isURL(value)) {
+        return value;
+      }
+      return helpers.message('Поле "avatar" должно быть валидным url-адресом');
+    })
+      .messages({
+        'any.required': 'Поле "avatar" должно быть заполнено',
+      }),
   }),
+  headers: Joi.object().keys({
+    authorization: Joi.string().min(2).max(200).required(),
+  }).unknown(),
 });
 
 const validateLogin = celebrate({
@@ -51,14 +67,6 @@ const validateLogin = celebrate({
 });
 
 const validateGetUserInfo = celebrate({
-  params: Joi.object().keys({
-    userId: Joi.string().required().custom((value, helpers) => {
-      if (ObjectId.isValid(value)) {
-        return value;
-      }
-      return helpers.message('Невалидный id пользователя');
-    }),
-  }),
   headers: Joi.object().keys({
     authorization: Joi.string().min(2).max(200).required(),
   }).unknown(),
@@ -89,6 +97,9 @@ const validateCreateCard = celebrate({
     name: Joi.string().min(2).max(30),
     link: Joi.string().required(),
   }),
+  headers: Joi.object().keys({
+    authorization: Joi.string().min(2).max(200).required(),
+  }).unknown(),
 });
 
 const validateLikeCard = celebrate({
