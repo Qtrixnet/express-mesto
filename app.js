@@ -28,7 +28,7 @@ app.use((err, req, res, next) => {
     .status(statusCode)
     .send({
       message: statusCode === 500
-        ? 'На сервере произошла ошибка | центральный обработчик / не прошла валидация'
+        ? 'На сервере произошла ошибка'
         : message,
     });
 

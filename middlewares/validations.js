@@ -80,11 +80,11 @@ const validateGetCards = celebrate({
 
 const validateDeleteCard = celebrate({
   params: Joi.object().keys({
-    userId: Joi.string().required().custom((value, helpers) => {
+    cardId: Joi.string().required().custom((value, helpers) => {
       if (ObjectId.isValid(value)) {
         return value;
       }
-      return helpers.message('Невалидный id пользователя');
+      return helpers.message('Невалидный id карточки');
     }),
   }),
   headers: Joi.object().keys({
