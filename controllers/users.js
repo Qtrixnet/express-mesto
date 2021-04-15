@@ -1,9 +1,14 @@
+//* файл .env не выгружаю, но в нем записаны следующие данные:
+//* NODE_ENV=production, JWT_SECRET = 'super-strong-secret'
+
+const { NODE_ENV, JWT_SECRET = 'dev-key' } = process.env;
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-error');
 const BadRequestError = require('../errors/bad-request-error');
 const AuthError = require('../errors/auth-error');
+const EmailError = require('../errors/email-error');
 
 const getUsers = (req, res, next) => {
   User.find({})
@@ -14,12 +19,10 @@ const getUsers = (req, res, next) => {
 const getUserById = (req, res, next) => {
   const { userId } = req.params;
   User.findById(userId)
-    .then((user) => {
-      if (!user) {
-        throw new NotFoundError('Нет пользователя с таким id');
-      }
-      return res.send(user);
+    .orFail(() => {
+      throw new NotFoundError('Пользователь с таким id отсутствует');
     })
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
         throw new BadRequestError('Переданы некорректные данные');
@@ -44,6 +47,8 @@ const createUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         throw new BadRequestError('Переданы неверные данные');
+      } else if (err.name === 'MongoError') {
+        throw new EmailError('Пользователь с таким email уже зарегистрирован');
       } else {
         next(err);
       }
@@ -55,7 +60,14 @@ const updateUser = (req, res, next) => {
   const newUserName = req.body.name;
   const newUserAbout = req.body.about;
   const userId = req.user._id;
-  User.findByIdAndUpdate(userId, { name: newUserName, about: newUserAbout }, { new: true })
+  User.findByIdAndUpdate(
+    userId,
+    {
+      name: newUserName,
+      about: newUserAbout,
+    },
+    { new: true, runValidators: true },
+  )
     .then((user) => {
       if (!user) {
         throw new NotFoundError('Пользователь по указанному _id не найден.');
@@ -75,7 +87,7 @@ const updateUser = (req, res, next) => {
 const updateAvatar = (req, res, next) => {
   const newUserAvatar = req.body.avatar;
   const userId = req.user._id;
-  User.findByIdAndUpdate(userId, { avatar: newUserAvatar }, { new: true })
+  User.findByIdAndUpdate(userId, { avatar: newUserAvatar }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
         throw new NotFoundError('Пользователь по указанному _id не найден.');
@@ -99,11 +111,12 @@ const login = (req, res, next) => {
       if (!user) {
         throw new NotFoundError('Пользователь по указанному _id не найден.');
       } else {
-        const token = jwt.sign({ _id: user._id }, 'super-strong-secret', { expiresIn: '7d' });
+        const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'dev-key', { expiresIn: '7d' });
+        console.log(process.env.JWT_SECRET);
         res.send({ token });
       }
     })
-    .catch((err) => {
+    .catch(() => {
       throw new AuthError('Необходима авторизация');
     })
     .catch(next);
