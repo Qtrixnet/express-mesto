@@ -72,7 +72,7 @@ const updateUser = (req, res, next) => {
       if (!user) {
         throw new NotFoundError('Пользователь по указанному _id не найден.');
       }
-      return res.send('Данные профиля обновлены');
+      return res.send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
@@ -92,7 +92,7 @@ const updateAvatar = (req, res, next) => {
       if (!user) {
         throw new NotFoundError('Пользователь по указанному _id не найден.');
       }
-      return res.send('Аватар обновлен');
+      return res.send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
@@ -117,7 +117,7 @@ const login = (req, res, next) => {
       }
     })
     .catch(() => {
-      throw new AuthError('Необходима авторизация');
+      throw new AuthError('Неправильный логин или пароль');
     })
     .catch(next);
 };

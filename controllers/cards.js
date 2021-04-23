@@ -58,7 +58,7 @@ const likeCard = (req, res, next) => {
       if (!data) {
         throw new NotFoundError('Карточка с указанным _id не найдена');
       }
-      return res.send('Лайк поставлен');
+      return res.send(data);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
@@ -77,7 +77,7 @@ const dislikeCard = (req, res, next) => {
       if (!data) {
         throw new NotFoundError('Карточка с указанным _id не найдена');
       }
-      return res.send('Лайк удален');
+      return res.send(data);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
